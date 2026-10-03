@@ -1,0 +1,52 @@
+#pragma once
+
+#include <vector>
+#include "component.h"
+
+class PCB{
+    public:
+
+    PCB();
+    PCB(float width, float height, float cell_size);
+    //~PCB();
+
+    unsigned int texture = 0;
+    std::vector<float> temp_grid; //Temperature grid
+    int nx, ny; //Texture size
+
+    std::vector<Component> components; //Heat sources
+    int component_selected = -1;
+
+
+    float width; //PCB Width in mm
+    float height; //PCB Height in mm
+    float cell_size; //PCB Cell Size in mm
+    float t_amb = 25; //Ambient temperature ºC
+    int layers = 2; //Number of copper layers
+    float layer_thickness = 35; //Cu layer thickness in um
+    float h_conv = 10; //Convection coefficient W/m²K
+    float pcb_thickness = 1.4; //PCB thickness in mm
+
+    float simulation_speed = 1;
+
+    void resize(); //Resize temp_grid, pixel matrices and texture 
+    void update(); //Update pixels
+
+
+    private:
+
+        const float Cu_K = 350; //Copper Thermal conductivity (W/mK)
+        const float Cp_FR4 = 0.9; //FR4 Specific Heat J/gK
+        const float rho_FR4 = 1.85; //FR4 Density g/cm³
+
+        int max_iterations = 200;
+        float Rcond, Rconv, Cth;
+        float dt;
+
+        std::vector<unsigned char> pixels; //RGB Pixels, 8 bits per color channel
+
+
+        void color_map(float temp, unsigned char* color);
+        void calculate();
+
+};
