@@ -13,22 +13,29 @@ void App::Parameters(PCB& pcb)
     ImGui::Begin("Simulation Settings");
 
     bool resize_pcb = false;
+    bool reload_components = false;
 
     if(ImGui::CollapsingHeader("PCB Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
         resize_pcb |= ImGui::InputFloat("Width (mm)", &pcb.width, 1, 5, "%.2f");
         resize_pcb |= ImGui::InputFloat("Height (mm)", &pcb.height, 1, 5, "%.2f");
-        resize_pcb |= ImGui::SliderFloat("Cell Size (mm)", &pcb.cell_size, 1.0f, 50.0f, "%.1f");
+        resize_pcb |= ImGui::InputFloat("Cell Size (mm)", &pcb.cell_size, 1.0f, 5.0f, "%.1f");
+    }
+
+    if(resize_pcb){
+        pcb.resize();
     }
 
     if(ImGui::CollapsingHeader("Ambient Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
-
+        ImGui::InputFloat("Ambient Temperature (ºC)", &pcb.t_amb);
+        ImGui::InputFloat("Convection Coefficient (W/m²K)", &pcb.h_conv);
     }
 
     if(ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen)){
         if(ImGui::Button("Add Component")){
             pcb.components.push_back(Component("U" + std::to_string(pcb.components.size() + 1), pcb.width*0.5, 
-            pcb.height*0.5, 8, 8, 1));
+            pcb.height*0.5, 8, 8, 0.5));
             pcb.component_selected = (int)pcb.components.size() - 1;
+            reload_components = true;
 
         }
 
@@ -36,6 +43,7 @@ void App::Parameters(PCB& pcb)
         if(ImGui::Button("Delete Component")){
             pcb.components.erase(pcb.components.begin()+pcb.component_selected);
             pcb.component_selected = -1;
+            reload_components = true;
         }
 
         for(int i = 0; i<(int)pcb.components.size(); i++){
@@ -43,21 +51,39 @@ void App::Parameters(PCB& pcb)
         }
 
         if(pcb.component_selected >= 0 && pcb.component_selected < (int)pcb.components.size()){
-            ImGui::InputText("Name", &pcb.components[pcb.component_selected].name, 0, nullptr, nullptr);
-            ImGui::InputFloat("X (mm)", &pcb.components[pcb.component_selected].x_pos, 1.0f, 2.0f, "%.1f");
-            ImGui::InputFloat("Y (mm)", &pcb.components[pcb.component_selected].y_pos, 1.0f, 2.0f, "%.1f");
-            ImGui::InputFloat("Component width (mm)", &pcb.components[pcb.component_selected].width, 1.0f, 2.0f, "%.1f");
-            ImGui::InputFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 1.0f, 2.0f, "%.1f");
-        }
+            reload_components |= ImGui::InputText("Name", &pcb.components[pcb.component_selected].name, 0, nullptr, nullptr);
+            reload_components |= ImGui::InputFloat("X (mm)", &pcb.components[pcb.component_selected].x_pos, 1.0f, 2.0f, "%.1f");
+            reload_components |= ImGui::InputFloat("Y (mm)", &pcb.components[pcb.component_selected].y_pos, 1.0f, 2.0f, "%.1f");
+            reload_components |= ImGui::SliderFloat("Component width (mm)", &pcb.components[pcb.component_selected].width, 0.1f, 50.0f, "%.1f");
+            reload_components |= ImGui::SliderFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 0.1f, 50.0f, "%.1f");
+            reload_components |= ImGui::SliderFloat("Dissipated fpwer (W)", &pcb.components[pcb.component_selected].power, 0.1f, 20.0f, "%.1f");
+        }   
+    }
+
+    if(reload_components) {
+        pcb.reload_components();
     }
 
 
-    if(resize_pcb){
-        pcb.resize();
-    }
 
     if(ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::SliderFloat("Simulation Speed", &pcb.simulation_speed, 0.1f, 5.0f, "%.1f");
+
+        ImGui::Checkbox("Autorange", &pcb.autorange);
+        if(!pcb.autorange){
+            ImGui::DragFloat("Cold Temperature", &pcb.range_min, 0.2f, -10.0f, pcb.range_max-1);
+            ImGui::DragFloat("Hot Temperature", &pcb.range_max, 0.2f, pcb.range_min+1, 200.0f);
+        }
+
+        ImGui::ColorEdit3("Cold Color", (float*)&pcb.cold_color);
+        ImGui::ColorEdit3("Medium Color", (float*)&pcb.medium_color);
+        ImGui::ColorEdit3("Hot Color", (float*)&pcb.hot_color);
+
+        ImGui::Text("Tmin: %.1f ºC | Tmax: %.1f ºC", pcb.T_min, pcb.T_max);
+
+        
+
+
     }
 
     ImGui::End();
@@ -81,10 +107,10 @@ void App::Viewport(PCB& pcb){
     if(hovered){
         ImVec2 mouse = ImGui::GetMousePos();
         ImVec2 pcb_pos((mouse.x-p0.x)/scale, (mouse.y-p0.y)/scale);
-        int ci = std::clamp((int)(mouse.x / pcb.cell_size), 0, pcb.nx - 1);
-        int cj = std::clamp((int)(mouse.y / pcb.cell_size), 0, pcb.ny - 1);
+        int ci = std::clamp((int)(pcb_pos.x / pcb.cell_size), 0, pcb.nx - 1);
+        int cj = std::clamp((int)(pcb_pos.y / pcb.cell_size), 0, pcb.ny - 1);
         ImGui::SetTooltip("(%.1f, %.1f) mm\nT = %.1f ºC", pcb_pos.x, pcb_pos.y, pcb.temp_grid[cj*pcb.nx+ci]);
-    }
+    }   
 
     //Component drawing
     for(int i = 0; i < (int)pcb.components.size(); i++){
