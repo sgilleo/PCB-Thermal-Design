@@ -337,6 +337,7 @@ public:
                 heaters[selected].x += d.x / scale;
                 heaters[selected].y += d.y / scale;
                 sourcesChanged();
+                
             }
         }
         ImGui::End();

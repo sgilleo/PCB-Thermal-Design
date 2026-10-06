@@ -37,6 +37,10 @@ void PCB::resize(){
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //The texture minifying filter
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //The texture magnifying filter
+    //Avoid border interpolation
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, nx, ny, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 }
@@ -105,33 +109,34 @@ void PCB::reload_components(){
 }
 
 void PCB::color_map(float temp, float t_min, float t_max, unsigned char* color){
-    temp = std::clamp(temp, t_min, t_max); //Crop values above and below threshold
     temp = (temp-t_min)/(t_max-t_min); //Map temperature to 0-1 range
     float r, g, b;
-    if (temp < 0.25f) { 
-        float u = temp / 0.25f;      
-        r = 0;  
-        g = u;   
-        b = 1; 
+
+    if(temp < 0.33f){
+        float u = temp / 0.33f;
+        u = std::clamp(u, 0.0f, 1.0f);
+        r = color_1.x * (1-u) + u * color_2.x;
+        g = color_1.y * (1-u) + u * color_2.y;
+        b = color_1.z * (1-u) + u * color_2.z;
     }
-    else if (temp < 0.50f) {
-        float u = (temp - 0.25f)/0.25f; 
-        r = 0;  
-        g = 1;    
-        b = 1 - u; 
+
+
+    if(temp >= 0.33f && temp < 0.66f){
+        float u = (temp-0.33f)/0.33f;
+        u = std::clamp(u, 0.0f, 1.0f);
+        r = color_2.x * (1-u) + u * color_3.x;
+        g = color_2.y * (1-u) + u * color_3.y;
+        b = color_2.z * (1-u) + u * color_3.z;
     }
-    else if (temp < 0.75f) { 
-        float u = (temp - 0.50f)/0.25f; 
-        r = u;  
-        g = 1; 
-        b = 0; 
-    }
-    else{
-        float u = (temp - 0.75f)/0.25f; 
-        r = 1;   
-        g = 1 - u;
-        b = 0; 
-    }
+
+
+    if(temp >= 0.66f){
+        float u = (temp-0.66f)/0.33f;
+        u = std::clamp(u, 0.0f, 1.0f);
+        r = color_3.x * (1-u) + u * color_4.x;
+        g = color_3.y * (1-u) + u * color_4.y;
+        b = color_3.z * (1-u) + u * color_4.z;
+    }   
 
     color[0] = (unsigned char)(r * 255); //R Channel
     color[1] = (unsigned char)(g * 255); //G Channel

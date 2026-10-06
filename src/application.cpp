@@ -77,9 +77,10 @@ void App::Parameters(PCB& pcb)
             ImGui::DragFloat("Hot Temperature", &pcb.range_max, 0.2f, pcb.range_min+1, 200.0f);
         }
 
-        ImGui::ColorEdit3("Cold Color", (float*)&pcb.cold_color);
-        ImGui::ColorEdit3("Medium Color", (float*)&pcb.medium_color);
-        ImGui::ColorEdit3("Hot Color", (float*)&pcb.hot_color);
+        ImGui::ColorEdit3("Color 1", (float*)&pcb.color_1);
+        ImGui::ColorEdit3("Color 2", (float*)&pcb.color_2);
+        ImGui::ColorEdit3("Color 3", (float*)&pcb.color_3);
+        ImGui::ColorEdit3("Color 4", (float*)&pcb.color_4);
 
         ImGui::Text("Tmin: %.1f ºC | Tmax: %.1f ºC", pcb.T_min, pcb.T_max);
 
@@ -93,7 +94,7 @@ void App::Parameters(PCB& pcb)
 
 void App::Viewport(PCB& pcb){
 
-    ImGui::Begin("PCB Thermal Simulation");    
+    ImGui::Begin("PCB Thermal Simulation", nullptr, ImGuiWindowFlags_NoMove);    
 
     ImVec2 avail = ImGui::GetContentRegionAvail();
     float scale = std::min(avail.x / pcb.width, avail.y / pcb.height); //Scale in px/mm
@@ -105,7 +106,7 @@ void App::Viewport(PCB& pcb){
     bool hovered = ImGui::IsItemHovered();
     ImDrawList* dl = ImGui::GetWindowDrawList();
 
-
+    //Temperature probe
     if(hovered){
         ImVec2 mouse = ImGui::GetMousePos();
         ImVec2 pcb_pos((mouse.x-p0.x)/scale, (mouse.y-p0.y)/scale);
@@ -120,6 +121,14 @@ void App::Viewport(PCB& pcb){
         ImVec2 p_max(p_min.x+pcb.components[i].width*scale, p_min.y+pcb.components[i].height*scale); //Lower right corner
         dl->AddRect(p_min, p_max, i==pcb.component_selected? IM_COL32(255, 255, 255, 255):IM_COL32(0, 0, 0, 255), 5.0f, 0, 2.0f);
         dl->AddText(ImVec2(p_min.x + 2, p_min.y + 2), IM_COL32(0, 0, 0, 255), pcb.components[i].name.c_str());
+    }
+
+    //Component dragging
+    if(pcb.component_selected >= 0 && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)){
+        ImVec2 delta = ImGui::GetIO().MouseDelta;
+        pcb.components[pcb.component_selected].x_pos += delta.x / scale;
+        pcb.components[pcb.component_selected].y_pos += delta.y / scale;
+        pcb.reload_components();
     }
 
 

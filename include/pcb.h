@@ -39,9 +39,11 @@ class PCB{
     float T_min; //Minimum temperature of the PCB ºC
     float T_max; //Maximum temperature of the PCB ºC
 
-    ImVec4 cold_color = ImVec4(0, 0, 255, 255);
-    ImVec4 medium_color = ImVec4(128, 128, 0, 255);
-    ImVec4 hot_color = ImVec4(255, 0, 0, 255);
+    ImVec4 color_1 = ImVec4(0/255.0f, 255/255.0f, 255/255.0f, 255/255.0f);
+    ImVec4 color_2 = ImVec4(0/255.0f, 255/255.0f, 0/255.0f, 255/255.0f);
+    ImVec4 color_3 = ImVec4(255/255.0f, 255/255.0f, 0/255.0f, 255/255.0f);
+    ImVec4 color_4 = ImVec4(255/255.0f, 0/255.0f, 0/255.0f, 255/255.0f);
+
     float range_min = 0;
     float range_max = 100;
 
