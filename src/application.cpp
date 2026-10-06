@@ -19,6 +19,8 @@ void App::Parameters(PCB& pcb)
         resize_pcb |= ImGui::InputFloat("Width (mm)", &pcb.width, 1, 5, "%.2f");
         resize_pcb |= ImGui::InputFloat("Height (mm)", &pcb.height, 1, 5, "%.2f");
         resize_pcb |= ImGui::InputFloat("Cell Size (mm)", &pcb.cell_size, 1.0f, 5.0f, "%.1f");
+        ImGui::SliderFloat("Layer thicknes (um)", &pcb.layer_thickness, 18.0f, 70.0f, "%.1f");
+        ImGui::SliderInt("Number of copper planes", &pcb.layers, 2.0f, 32.0f, "%d");
     }
 
     if(resize_pcb){
