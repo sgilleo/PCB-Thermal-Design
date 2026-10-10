@@ -113,6 +113,15 @@ void App::Viewport(PCB& pcb){
         int ci = std::clamp((int)(pcb_pos.x / pcb.cell_size), 0, pcb.nx - 1);
         int cj = std::clamp((int)(pcb_pos.y / pcb.cell_size), 0, pcb.ny - 1);
         ImGui::SetTooltip("(%.1f, %.1f) mm\nT = %.1f ºC", pcb_pos.x, pcb_pos.y, pcb.temp_grid[cj*pcb.nx+ci]);
+
+        //Component dragging
+        if(pcb.component_selected >= 0 && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)){
+            ImVec2 delta = ImGui::GetIO().MouseDelta;
+            pcb.components[pcb.component_selected].x_pos += delta.x / scale;
+            pcb.components[pcb.component_selected].y_pos += delta.y / scale;
+            pcb.reload_components();
+        }
+
     }   
 
     //Component drawing
@@ -123,13 +132,7 @@ void App::Viewport(PCB& pcb){
         dl->AddText(ImVec2(p_min.x + 2, p_min.y + 2), IM_COL32(0, 0, 0, 255), pcb.components[i].name.c_str());
     }
 
-    //Component dragging
-    if(pcb.component_selected >= 0 && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)){
-        ImVec2 delta = ImGui::GetIO().MouseDelta;
-        pcb.components[pcb.component_selected].x_pos += delta.x / scale;
-        pcb.components[pcb.component_selected].y_pos += delta.y / scale;
-        pcb.reload_components();
-    }
+    
 
 
     ImGui::End();

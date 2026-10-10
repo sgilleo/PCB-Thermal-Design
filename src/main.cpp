@@ -77,8 +77,10 @@ int main(){
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+#ifdef DEBUG_MODE
         //Show Demo Window
         ImGui::ShowDemoWindow();
+#endif
 
         app.RenderUI(pcb);
 
