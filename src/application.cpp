@@ -56,9 +56,9 @@ void App::Parameters(PCB& pcb)
             reload_components |= ImGui::InputText("Name", &pcb.components[pcb.component_selected].name, 0, nullptr, nullptr);
             reload_components |= ImGui::InputFloat("X (mm)", &pcb.components[pcb.component_selected].x_pos, 1.0f, 2.0f, "%.1f");
             reload_components |= ImGui::InputFloat("Y (mm)", &pcb.components[pcb.component_selected].y_pos, 1.0f, 2.0f, "%.1f");
-            reload_components |= ImGui::SliderFloat("Component width (mm)", &pcb.components[pcb.component_selected].width, 0.1f, 50.0f, "%.1f");
-            reload_components |= ImGui::SliderFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 0.1f, 50.0f, "%.1f");
-            reload_components |= ImGui::SliderFloat("Dissipated fpwer (W)", &pcb.components[pcb.component_selected].power, 0.1f, 20.0f, "%.1f");
+            reload_components |= ImGui::DragFloat("Component width (mm)", &pcb.components[pcb.component_selected].width, 1.0f, 0.1f, 50.0f, "%.1f");
+            reload_components |= ImGui::DragFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 1.0f, 0.1f, 50.0f, "%.1f");
+            reload_components |= ImGui::DragFloat("Dissipated power (W)", &pcb.components[pcb.component_selected].power, 0.5f, 0.1f, 20.0f, "%.2f");
         }   
     }
 
@@ -77,10 +77,10 @@ void App::Parameters(PCB& pcb)
             ImGui::DragFloat("Hot Temperature", &pcb.range_max, 0.2f, pcb.range_min+1, 200.0f);
         }
 
-        ImGui::ColorEdit3("Color 1", (float*)&pcb.color_1);
-        ImGui::ColorEdit3("Color 2", (float*)&pcb.color_2);
-        ImGui::ColorEdit3("Color 3", (float*)&pcb.color_3);
-        ImGui::ColorEdit3("Color 4", (float*)&pcb.color_4);
+        ImGui::ColorEdit3("Color 1", (float*)&pcb.color_1, ImGuiColorEditFlags_NoInputs);
+        ImGui::ColorEdit3("Color 2", (float*)&pcb.color_2, ImGuiColorEditFlags_NoInputs);
+        ImGui::ColorEdit3("Color 3", (float*)&pcb.color_3, ImGuiColorEditFlags_NoInputs);
+        ImGui::ColorEdit3("Color 4", (float*)&pcb.color_4, ImGuiColorEditFlags_NoInputs);
 
         ImGui::Text("Tmin: %.1f ºC | Tmax: %.1f ºC", pcb.T_min, pcb.T_max);
 
@@ -94,7 +94,23 @@ void App::Parameters(PCB& pcb)
 
 void App::Viewport(PCB& pcb){
 
-    ImGui::Begin("PCB Thermal Simulation", nullptr, ImGuiWindowFlags_NoMove);    
+    ImGui::Begin("PCB Thermal Simulation", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);    
+
+    if(ImGui::BeginMenuBar()){
+
+        if (ImGui::BeginMenu("File"))
+        {
+            ImGui::MenuItem("Save", NULL, false);
+            ImGui::EndMenu();
+        }
+
+
+        ImGui::EndMenuBar();
+
+    }
+
+
+    
 
     ImVec2 avail = ImGui::GetContentRegionAvail();
     float scale = std::min(avail.x / pcb.width, avail.y / pcb.height); //Scale in px/mm
@@ -138,10 +154,10 @@ void App::Viewport(PCB& pcb){
     ImGui::End();
 }
 
-void App::RenderUI(PCB& pcb){
-    pcb.update();
-    Viewport(pcb);
-    Parameters(pcb);
+void App::RenderUI(){
+    pcb1.update();
+    Viewport(pcb1);
+    Parameters(pcb1);
 }
 
 

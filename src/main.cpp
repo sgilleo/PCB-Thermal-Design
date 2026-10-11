@@ -56,7 +56,6 @@ int main(){
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     App app;
-    PCB pcb;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -82,7 +81,7 @@ int main(){
         ImGui::ShowDemoWindow();
 #endif
 
-        app.RenderUI(pcb);
+        app.RenderUI();
 
         // Rendering
         ImGui::Render();

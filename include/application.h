@@ -1,18 +1,17 @@
 #pragma once
 
-class PCB;
+#include "pcb.h"
 
 class App{
     public:
     //App();
     //~App();
 
+    PCB pcb1;
 
     void Parameters(PCB& pcb);
     void Viewport(PCB& pcb);
-    //void Update(solver solver);
-
-    void RenderUI(PCB& pcb);
+    void RenderUI();
 
     private:
 
