@@ -13,6 +13,17 @@ This tool visualizes heat distribution and dissipation across a PCB in real time
 
 ---
 
+## Table of contents
+* [Features](#features)
+* [Build and Run Instructions](#build-and-run-instructions)
+* [Usage Manual](#usage)
+  * [Settings Panel](#the-settings-panel)
+  * [Visualizing Panel](#the-visualizing-panel)
+* [Project Structure](#project-structure)
+* [Disclaimer and Acknowledgments](#disclaimer-and-acknowledgments)
+
+---
+
 ## Features
 
 * **Real-Time Simulation:** Iterative thermal conduction calculations using a 2D numerical grid.
@@ -135,7 +146,7 @@ PCB-Thermal-Design/
 ---
 ## Disclaimer and Acknowledgments
 
-This tool does not aim to accurately predict the exact temperatures on a final product. There are already a ton of high precision CFD simulators out there with much higher precision. This tool's purpose is to provide the enigneer with an intuition on how to take the thermal design into account with a rough yet simple visualisation.
+This tool does not aim to accurately predict the exact temperatures on a final product. There are already a ton of high precision CFD simulators out there with much higher precision. This tool's purpose is to provide the enigneer with an intuition on how to take the thermal design into account with a rough yet simple visualization.
 
 
 The idea of this project came up with the desire of optimizing an already made spreadsheet tool to visualize the temperature gradient in a PCB for a good subject of the Electronic Systems Master's Degree of the Politechnic University of Valencia: *Thermal Design and EMC in Electronic Products*. Rewriting the program in a custom-made C++ program gives this utility a higher performance and longer lifespan that I hope will prove useful for other designers.
