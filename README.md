@@ -2,9 +2,9 @@
 
 ![](demo.gif)
 
-A lightweight interactive 2D thermal simulator for printed circuit boards (PCBs) built with **C++**, **OpenGL 3.3**, and **Dear ImGui**.
+An **Open Source** lightweight interactive 2D thermal simulator for printed circuit boards (PCBs) built with **C++**, **OpenGL 3.3**, and **Dear ImGui**.
 
-This tool visualizes heat distribution and dissipation across a PCB in real time by numerically solving the **2D heat equation (Finite Difference Method / FDM)**, rendering a dynamic heatmap directly over the board geometry.
+This tool visualizes heat distribution and dissipation across a PCB in real time rendering a dynamic heatmap directly over the board geometry.
 
 <!--![License](https://img.shields.io/badge/License-MIT-blue.svg)-->
 ![C++](https://img.shields.io/badge/Language-C%2B%2B17-00599C.svg)
@@ -77,19 +77,43 @@ This tab holds all the phisical parameters related to the structure of the circu
 - **Convection Coefficient:** Convection coefficient in W/m²K. Typical values are around 10 W/m²K for natural convection (taking into account heat radiation).
 
 #### Components
-This section provides an interface for adding and editing components and potential heat sources.
+This section provides a menu for adding and editing components and potential heat sources.
+
+- **Name:** Component name.
+- **X:** Component X coordinate in mm.
+- **Y:** Component Y coordinate in mm.
+- **Component width:** component width in mm.
+- **Component height:** component height in mm.
+- **Disspiated power:** total power turned into heat in W.
+
 
 #### Simulation
+In this tab you can configure all the simulation related parameters
+- **Simulation Speed:** simulation simestep multiplier. Setting this parameter too high may lead to loss of stability.
+- **Autorange:** automatic color adjustment based on the maximum and minimum temperature on the pcb. Disabling this option lets the user manually select the lower and higher temperature on the PCB.
+
+- **Color selection**: Color picker for equally spaced ranges of temperature between minimum and maximum.
+
+- **Tmin** and **Tmax:** shows the minimum and maximum temperature in ºC in real time.
 
 
 ### The visualizing panel
 
+This panel displays a real time representation of the PCB temperatures overlayed with all the heat sources. The color map and temperature ranges can be configured in the settings panel.
+
+Hovering the mouse around the PCB shows a marker with the temperature of the specific cell along with its coordinates in relation to the origin (top left corner).
+
+If there is a component selected in the settings panel, it can be dragged around the board to place in its desired position.
 
 ---
 
 ## Project Structure
 
-The project follows a clean structure separating the UI, physics engine, and third-party libraries:
+This project was built in a Linux machine from the ground up without the use of any propietary IDE. This means that it is compatible and ready to modify with the code editor of your choice (Vim, VSCode, Atom, Sublime Text, Emacs, Notepad, ...). 
+
+The build process generates a `compile_commands.json` file in the project root folder used for code autocompletion. 
+
+The folders are structured to be organized and easy to understand in the following way: 
 
 ```text
 PCB-Thermal-Design/
@@ -109,6 +133,10 @@ PCB-Thermal-Design/
     └── release/            # Release configuration
 ``` 
 ---
-## Acknowledgments
+## Disclaimer and Acknowledgments
 
-The idea of this project came with a cool subject of the Electronic Systems Master's Degree of the Politechnic University of Valencia: *Thermal Design and EMC in Electronic Products*
+This tool does not aim to accurately predict the exact temperatures on a final product. There are already a ton of high precision CFD simulators out there with much higher precision. This tool's purpose is to provide the enigneer with an intuition on how to take the thermal design into account with a rough yet simple visualisation.
+
+
+The idea of this project came up with the desire of optimizing an already made spreadsheet tool to visualize the temperature gradient in a PCB for a good subject of the Electronic Systems Master's Degree of the Politechnic University of Valencia: *Thermal Design and EMC in Electronic Products*. Rewriting the program in a custom-made C++ program gives this utility a higher performance and longer lifespan that I hope will prove useful for other designers.
+
