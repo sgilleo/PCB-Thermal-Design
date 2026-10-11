@@ -131,6 +131,7 @@ PCB-Thermal-Design/
 ├── CMakeLists.txt          # CMake build system configuration
 ├── CMakePresets.json       # CMake presets for configuration
 ├── README.md               # Project documentation
+├── fonts/                  # Fonts used for the project
 ├── include/                # Header files (.h)
 │   ├── application.h       # Window management and ImGui interface
 │   └── pcb.h               # PCB logic and thermal physics
