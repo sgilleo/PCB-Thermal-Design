@@ -9,10 +9,12 @@ class App{
 
     PCB pcb1;
 
-    void Parameters(PCB& pcb);
-    void Viewport(PCB& pcb);
     void RenderUI();
 
-    private:
 
+    void SetupStyle(ImGuiStyle& style);
+
+    private:
+        void Parameters(PCB& pcb);
+        void Viewport(PCB& pcb);
 };

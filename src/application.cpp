@@ -16,6 +16,7 @@ void App::Parameters(PCB& pcb)
     bool resize_pcb = false;
     bool reload_components = false;
 
+    ImGui::SeparatorText("PCB Parameters");
     if(ImGui::CollapsingHeader("PCB Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
         resize_pcb |= ImGui::InputFloat("Width (mm)", &pcb.width, 1, 5, "%.2f");
         resize_pcb |= ImGui::InputFloat("Height (mm)", &pcb.height, 1, 5, "%.2f");
@@ -28,11 +29,13 @@ void App::Parameters(PCB& pcb)
         pcb.resize();
     }
 
+    ImGui::SeparatorText("Ambient Parameters");
     if(ImGui::CollapsingHeader("Ambient Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::InputFloat("Ambient Temperature (ºC)", &pcb.t_amb);
         ImGui::InputFloat("Convection Coefficient (W/m²K)", &pcb.h_conv);
     }
 
+    ImGui::SeparatorText("Components");
     if(ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen)){
         if(ImGui::Button("Add Component")){
             pcb.components.push_back(Component("U" + std::to_string(pcb.components.size() + 1), pcb.width*0.5, 
@@ -68,6 +71,7 @@ void App::Parameters(PCB& pcb)
     }
 
 
+    ImGui::SeparatorText("Simulation");
 
     if(ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::SliderFloat("Simulation Speed", &pcb.simulation_speed, 0.1f, 5.0f, "%.1f");
@@ -184,5 +188,35 @@ void App::RenderUI(){
     Viewport(pcb1);
     Parameters(pcb1);
 }
+
+void App::SetupStyle(ImGuiStyle& style){
+    // Configure App Style
+
+      // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+
+    style.FrameRounding = 5.0f;
+    style.WindowPadding = ImVec2(10.0f,8.0f);
+    style.FramePadding = ImVec2(4.0f, 1.0f);
+    style.ItemSpacing = ImVec2(6.0f, 4.0f);
+    style.WindowRounding = 8.0f;
+    style.FrameRounding = 4.0f;
+    style.GrabRounding = 12.0f;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
 
 

@@ -38,6 +38,9 @@ int main(){
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable window docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-viewports feature
+    io.ConfigDpiScaleFonts=true; 
+
+    io.Fonts->AddFontFromFileTTF("fonts/JetBrainsMono-Regular.ttf");
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -48,6 +51,10 @@ int main(){
     style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
     style.FontScaleDpi = main_scale;        // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
 
+    App app;
+
+
+    app.SetupStyle(style);
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -55,7 +62,6 @@ int main(){
 
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    App app;
 
     while (!glfwWindowShouldClose(window))
     {
