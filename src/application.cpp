@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "component.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_stdlib.h"
 #include "GLFW/glfw3.h"
 #include "application.h"
@@ -94,7 +95,7 @@ void App::Parameters(PCB& pcb)
 
 void App::Viewport(PCB& pcb){
 
-    ImGui::Begin("PCB Thermal Simulation", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_MenuBar);    
+    ImGui::Begin("PCB Thermal Simulation", nullptr, ImGuiWindowFlags_MenuBar);    
 
     if(ImGui::BeginMenuBar()){
 
@@ -155,7 +156,31 @@ void App::Viewport(PCB& pcb){
 }
 
 void App::RenderUI(){
+
+#ifdef DEBUG_MODE
+        //Show Demo Window
+        ImGui::ShowDemoWindow();
+#endif
+
     pcb1.update();
+
+    ImGuiID dockspace_id = ImGui::GetID("My Dockspace");
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr)
+    {
+        ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+        ImGuiID dock_id_left = 0;
+        ImGuiID dock_id_main = dockspace_id;
+        ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.30f, &dock_id_left, &dock_id_main);
+        ImGui::DockBuilderDockWindow("PCB Thermal Simulation", dock_id_main);
+        ImGui::DockBuilderDockWindow("Simulation Settings", dock_id_left);
+        ImGui::DockBuilderFinish(dockspace_id);
+    }
+
+    ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
+
     Viewport(pcb1);
     Parameters(pcb1);
 }
