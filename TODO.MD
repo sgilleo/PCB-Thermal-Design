@@ -1,0 +1,10 @@
+- ~~Add Docking feature~~
+- ~~Change font~~
+- Load icon fonts
+- Add controls for saving image
+- Add controls for configuring appearance and theme
+- Add PCB image overlay 
+- Add 2.5D and Stackup editor (PCB, Junction, Heatsink, ...)
+- Add Vertical Stackup Representation
+- Add Junction and Coldplate heatmap tabs
+- Add duty cycle and transient simulation control.
