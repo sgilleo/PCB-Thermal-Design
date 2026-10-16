@@ -186,7 +186,9 @@ void PCB::reload_components(){
 
 void PCB::color_map(float temp, float t_min, float t_max, unsigned char* color){
     temp = (temp-t_min)/(t_max-t_min); //Map temperature to 0-1 range
-    float r, g, b;
+    float r = 0;
+    float g = 0;
+    float b = 0;
 
     if(temp < 0.33f){
         float u = temp / 0.33f;
