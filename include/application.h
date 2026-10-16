@@ -17,4 +17,5 @@ class App{
     private:
         void Parameters(PCB& pcb);
         void Viewport(PCB& pcb);
+        void DrawTexture(PCB& pcb, std::vector<float>& grid);
 };

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <vector>
 #include "component.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -38,15 +39,15 @@ void App::Parameters(PCB& pcb)
     ImGui::SeparatorText("Components");
     if(ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen)){
         if(ImGui::Button("Add Component")){
-            pcb.components.push_back(Component("U" + std::to_string(pcb.components.size() + 1), pcb.width*0.5, 
-            pcb.height*0.5, 8, 8, 0.5));
+            pcb.components.push_back(Component{"U" + std::to_string(pcb.components.size() + 1), pcb.width*0.5f, 
+            pcb.height*0.5f, 8, 8});
             pcb.component_selected = (int)pcb.components.size() - 1;
             reload_components = true;
 
         }
 
         ImGui::SameLine();
-        if(ImGui::Button("Delete Component")){
+        if(ImGui::Button("Delete Component") && pcb.component_selected >= 0){
             pcb.components.erase(pcb.components.begin()+pcb.component_selected);
             pcb.component_selected = -1;
             reload_components = true;
@@ -63,6 +64,7 @@ void App::Parameters(PCB& pcb)
             reload_components |= ImGui::DragFloat("Component width (mm)", &pcb.components[pcb.component_selected].width, 1.0f, 0.1f, 50.0f, "%.1f");
             reload_components |= ImGui::DragFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 1.0f, 0.1f, 50.0f, "%.1f");
             reload_components |= ImGui::DragFloat("Dissipated power (W)", &pcb.components[pcb.component_selected].power, 0.5f, 0.1f, 20.0f, "%.2f");
+            reload_components |= ImGui::DragFloat("R_jb (K/W)", &pcb.components[pcb.component_selected].Rjb, 0.05f, 0.1f, 10.0f, "%.1f");
         }   
     }
 
@@ -87,7 +89,7 @@ void App::Parameters(PCB& pcb)
         ImGui::ColorEdit3("Color 3", (float*)&pcb.color_3, ImGuiColorEditFlags_NoInputs);
         ImGui::ColorEdit3("Color 4", (float*)&pcb.color_4, ImGuiColorEditFlags_NoInputs);
 
-        ImGui::Text("Tmin: %.1f ºC | Tmax: %.1f ºC", pcb.T_min, pcb.T_max);
+        ImGui::Text("Tmin: %.1f ºC | Tavg: %.1f ºC | Tmax: %.1f ºC", pcb.T_min, pcb.T_avg, pcb.T_max);
 
         
 
@@ -105,7 +107,9 @@ void App::Viewport(PCB& pcb){
 
         if (ImGui::BeginMenu("File"))
         {
-            ImGui::MenuItem("Save", NULL, false);
+            if(ImGui::MenuItem("Load", "Ctrl+S")){
+                pcb.load_image();
+            }
             ImGui::EndMenu();
         }
 
@@ -114,44 +118,29 @@ void App::Viewport(PCB& pcb){
 
     }
 
+    if(ImGui::BeginTabBar("Tab bar")){
 
-    
+        if (ImGui::BeginTabItem("PCB", NULL)){
 
-    ImVec2 avail = ImGui::GetContentRegionAvail();
-    float scale = std::min(avail.x / pcb.width, avail.y / pcb.height); //Scale in px/mm
-    scale = std::max(scale, 1.f);    
-    ImVec2 size(pcb.width*scale, pcb.height*scale);
+            DrawTexture(pcb, pcb.PCB_temp);
+            
+            ImGui::EndTabItem();
 
-    ImVec2 p0 = ImGui::GetCursorScreenPos();
-    ImGui::Image((ImTextureID)(intptr_t)pcb.texture, size);
-    bool hovered = ImGui::IsItemHovered();
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-
-    //Temperature probe
-    if(hovered){
-        ImVec2 mouse = ImGui::GetMousePos();
-        ImVec2 pcb_pos((mouse.x-p0.x)/scale, (mouse.y-p0.y)/scale);
-        int ci = std::clamp((int)(pcb_pos.x / pcb.cell_size), 0, pcb.nx - 1);
-        int cj = std::clamp((int)(pcb_pos.y / pcb.cell_size), 0, pcb.ny - 1);
-        ImGui::SetTooltip("(%.1f, %.1f) mm\nT = %.1f ºC", pcb_pos.x, pcb_pos.y, pcb.temp_grid[cj*pcb.nx+ci]);
-
-        //Component dragging
-        if(pcb.component_selected >= 0 && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)){
-            ImVec2 delta = ImGui::GetIO().MouseDelta;
-            pcb.components[pcb.component_selected].x_pos += delta.x / scale;
-            pcb.components[pcb.component_selected].y_pos += delta.y / scale;
-            pcb.reload_components();
         }
 
-    }   
+        if(ImGui::BeginTabItem("Junction")){
 
-    //Component drawing
-    for(int i = 0; i < (int)pcb.components.size(); i++){
-        ImVec2 p_min(p0.x+pcb.components[i].x_pos*scale, p0.y+pcb.components[i].y_pos*scale); //Upper Left corner
-        ImVec2 p_max(p_min.x+pcb.components[i].width*scale, p_min.y+pcb.components[i].height*scale); //Lower right corner
-        dl->AddRect(p_min, p_max, i==pcb.component_selected? IM_COL32(255, 255, 255, 255):IM_COL32(0, 0, 0, 255), 5.0f, 0, 2.0f);
-        dl->AddText(ImVec2(p_min.x + 2, p_min.y + 2), IM_COL32(0, 0, 0, 255), pcb.components[i].name.c_str());
+            DrawTexture(pcb, pcb.Junction_temp);
+
+            ImGui::EndTabItem();
+        }
+
+
+        ImGui::EndTabBar();
     }
+
+
+    
 
     
 
@@ -166,7 +155,7 @@ void App::RenderUI(){
         ImGui::ShowDemoWindow();
 #endif
 
-    pcb1.update();
+
 
     ImGuiID dockspace_id = ImGui::GetID("My Dockspace");
     ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -185,6 +174,8 @@ void App::RenderUI(){
 
     ImGui::DockSpaceOverViewport(dockspace_id, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
 
+    pcb1.calculate();
+
     Viewport(pcb1);
     Parameters(pcb1);
 }
@@ -202,21 +193,48 @@ void App::SetupStyle(ImGuiStyle& style){
     style.FrameRounding = 4.0f;
     style.GrabRounding = 12.0f;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
+void App::DrawTexture(PCB& pcb, std::vector<float>& grid){
+    ImVec2 avail = ImGui::GetContentRegionAvail();
+    float scale = std::min(avail.x / pcb.width, avail.y / pcb.height); //Scale in px/mm
+    scale = std::max(scale, 1.f);    
+    ImVec2 size(pcb.width*scale, pcb.height*scale);
 
+    ImVec2 p0 = ImGui::GetCursorScreenPos();
+
+    pcb1.update(grid);
+
+    ImGui::Image((ImTextureID)(intptr_t)pcb.pcb_image, size);
+    ImGui::SetCursorScreenPos(p0);
+    ImGui::Image((ImTextureID)(intptr_t)pcb.texture, size);
+    bool hovered = ImGui::IsItemHovered();
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+
+    //Temperature probe
+    if(hovered){
+        ImVec2 mouse = ImGui::GetMousePos();
+        ImVec2 pcb_pos((mouse.x-p0.x)/scale, (mouse.y-p0.y)/scale);
+        int ci = std::clamp((int)(pcb_pos.x / pcb.cell_size), 0, pcb.nx - 1);
+        int cj = std::clamp((int)(pcb_pos.y / pcb.cell_size), 0, pcb.ny - 1);
+        ImGui::SetTooltip("(%.1f, %.1f) mm\nT = %.1f ºC", pcb_pos.x, pcb_pos.y, grid[cj*pcb.nx+ci]);
+
+        //Component dragging
+        if(pcb.component_selected >= 0 && ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0.0f)){
+            ImVec2 delta = ImGui::GetIO().MouseDelta;
+            pcb.components[pcb.component_selected].x_pos += delta.x / scale;
+            pcb.components[pcb.component_selected].y_pos += delta.y / scale;
+            pcb.reload_components();
+        }
+
+    }   
+
+    //Component drawing
+    for(int i = 0; i < (int)pcb.components.size(); i++){
+        ImVec2 p_min(p0.x+pcb.components[i].x_pos*scale, p0.y+pcb.components[i].y_pos*scale); //Upper Left corner
+        ImVec2 p_max(p_min.x+pcb.components[i].width*scale, p_min.y+pcb.components[i].height*scale); //Lower right corner
+        dl->AddRect(p_min, p_max, i==pcb.component_selected? IM_COL32(255, 255, 255, 255):IM_COL32(0, 0, 0, 255), 5.0f, 0, 2.0f);
+        dl->AddText(ImVec2(p_min.x + 2, p_min.y + 2), IM_COL32(0, 0, 0, 255), pcb.components[i].name.c_str());
+    }
+}
