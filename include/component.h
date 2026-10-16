@@ -1,20 +1,17 @@
 #pragma once
 #include <string>
 
-class Component{
+struct Component{
 
-    public:
     std::string name;
     float width;
     float height;
     float x_pos;
     float y_pos;
-    float power = 0.5;
+    float power = 0.5; //Power dissipated by the component
+    float Rjb = 0.1f; //Thermal resistance from junction to board (K/W)
+    float Rjc = 5.0f; //Thermal resistance from junction to case (K/W)
 
-
-    Component(std::string name, float x_pos, float y_pos, float width, float height, float power);
-    private:
-
-   //Add duty cycle option
-
+    float duty_cycle = 1.0f; //On off duty cycle
+    float freq_on_off = 1.0f; //Working frequency
 };
