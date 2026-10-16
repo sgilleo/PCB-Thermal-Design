@@ -1,26 +1,51 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 
-project("PCB_Thermal_Design")
+project("PCB_Thermal_Design" C CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# In single-config generators (Make/Ninja): Release by default.
+# In multi-config (Visual Studio/Xcode) choosen with --config.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+if(NOT WIN32 AND CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_SOURCE_DIR}/compile_commands.json)
+endif()
+
+include(FetchContent)
 find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${CMAKE_BINARY_DIR}/compile_commands.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json)  
+find_package(glfw3 3.3 QUIET)
+if(NOT glfw3_FOUND)
+    message(STATUS "GLFW no encontrado en el sistema: se descargara con FetchContent")
+    set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG        3.4
+        GIT_SHALLOW    TRUE)
+    FetchContent_MakeAvailable(glfw)
+endif()
 
 
 add_executable(${CMAKE_PROJECT_NAME} 
     src/main.cpp
     src/application.cpp
     src/pcb.cpp
-    src/component.cpp
     imgui/imgui_draw.cpp
     imgui/imgui_tables.cpp
     imgui/imgui_widgets.cpp
     imgui/imgui.cpp
+    imgui/imgui_demo.cpp
     imgui/backends/imgui_impl_glfw.cpp
     imgui/backends/imgui_impl_opengl3.cpp
     imgui/misc/cpp/imgui_stdlib.cpp
@@ -35,54 +60,21 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     glfw
-    OpenGL::GL)
+    OpenGL::GL
+    #nfd
+    )
 
-if(CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Generator is multi-config: ${CMAKE_GENERATOR}")
-    message(STATUS "Available configs: ${CMAKE_CONFIGURATION_TYPES}")
+# Generator expression: ($<CONFIG:...>) also work in Visual Studio / Xcode
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:DEBUG_MODE>)
+
+if(MSVC)    # includes clang-cl
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /utf-8)   # /utf-8: for "ºC" in the code
 else()
-    message(STATUS "Generator is single-config: ${CMAKE_GENERATOR}")
-    message(STATUS "Current build type: ${CMAKE_BUILD_TYPE}")
-
-    
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_sources(${CMAKE_PROJECT_NAME} PRIVATE imgui/imgui_demo.cpp)
-        target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE DEBUG_MODE)
-
-        if(
-            (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
-            (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
-        )   
-
-            target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE /W4 /WX)
-
-        elseif(
-            (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
-            (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        )
-
-            target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -Wall -Wextra)
-
-        endif()
-
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        if(
-            (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
-            (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
-        )   
-
-            target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE /O2 /Oi /Gy)
-
-        elseif(
-            (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
-            (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        )
-
-            target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE -O3)
-
-        endif()
-    endif()
-
-
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
 endif()
+
+
+
+
+
 
