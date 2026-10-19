@@ -73,6 +73,14 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
 endif()
 
+# Copies resources to the executable folder
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/fonts
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>/fonts)
+endif()
+
 
 
 
