@@ -1,6 +1,6 @@
 # PCB Thermal Simulation
 
-![](demo.gif)
+![](res/demo.gif)
 
 An **Open Source** lightweight interactive 2D thermal simulator for printed circuit boards (PCBs) built with **C++**, **OpenGL 3.3**, and **Dear ImGui**.
 
@@ -52,17 +52,24 @@ Before getting started, ensure you have installed:
 
 Clone the repository in a folder of your choice and use CMake to build the source files.
 
-There are two CMake presets already preconfigured in the `CMakePresets.json` file:
-- **Release:** Compiles only the necesary files and enables compiler optimization. Recommended for most people.
+There are several CMake presets already preconfigured in the `CMakePresets.json` file:
+- **linux-x64-release:** Compiles only the necesary files and enables compiler optimization. **Recommended for most people using linux**.
 ```
-cmake --preset "release" && cmake --build build/release
-./build/release/PCB_Thermal_Design
+cmake --preset linux-x64-release && cmake --build --preset linux-x64-release
+cd build/linux-release
+./PCB_Thermal_Design
 ```
 
-- **Debug:** Includes ImGui's default demo window and enables compiler warning. Recommended for those who want to modify the source code or implement new features.
+- **windows-x64-release:** Windows cross-compilation in Linux using the [MinGW-w64 toolchain](https://www.mingw-w64.org/). Builds an executable file for Windows.
 ```
-cmake --preset "debug" && cmake --build build/debug
-./build/debug/PCB_Thermal_Design
+cmake --preset windows-x64-release && cmake --build --preset windows-x64-release
+```
+
+- **linux-x64-debug:** Linux debug configuration which includes ImGui's default demo window and enables compiler warning. Recommended for those who want to modify the source code or implement new features.
+```
+cmake --preset linux-x64-debug && cmake --build --preset linux-x64-debug
+cd build/linux-debug
+./PCB_Thermal_Design
 ```
 
 You can also use **CMake GUI** to configure and generate the files to build the project.
@@ -135,6 +142,7 @@ PCB-Thermal-Design/
 ├── include/                # Header files (.h)
 │   ├── application.h       # Window management and ImGui interface
 │   └── pcb.h               # PCB logic and thermal physics
+├── res/                    # Project resources
 ├── src/                    # Source files (.cpp)
 │   ├── main.cpp            # Application entry point and main loop
 │   ├── application.cpp     # UI implementation (Viewport and Panels)
@@ -148,7 +156,6 @@ PCB-Thermal-Design/
 ## Disclaimer and Acknowledgments
 
 This tool does not aim to accurately predict the exact temperatures on a final product. There are already a ton of high precision CFD simulators out there with much higher precision. This tool's purpose is to provide the enigneer with an intuition on how to take the thermal design into account with a rough yet simple visualization.
-
 
 The idea of this project came up with the desire of optimizing an already made spreadsheet tool to visualize the temperature gradient in a PCB for a good subject of the Electronic Systems Master's Degree of the Politechnic University of Valencia: *Thermal Design and EMC in Electronic Products*. Rewriting the program in a custom-made C++ program gives this utility a higher performance and longer lifespan that I hope will prove useful for other designers.
 

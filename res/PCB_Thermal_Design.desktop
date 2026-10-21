@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=PCB Thermal Design
+Exec=PCB_Thermal_Design
+Icon=icon
+Comment=PCB thermal design software
+Categories=Development;Engineering;

@@ -10,6 +10,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE 0x812F
+#endif
+
 PCB::PCB(): PCB(100.0f, 50.0f, 4.0f) { //Set defaults
     components.push_back(Component{"CPU", width/2-10, height/2-10, 20, 20, 0.5});
     components.push_back(Component{"LDO", width/2-40, height/2-10, 10, 5, 0.1});

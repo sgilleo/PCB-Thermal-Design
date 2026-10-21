@@ -13,18 +13,18 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-if(NOT WIN32 AND CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_BINARY_DIR}/compile_commands.json
-        ${CMAKE_SOURCE_DIR}/compile_commands.json)
-endif()
-
 include(FetchContent)
 find_package(OpenGL REQUIRED)
 
-find_package(glfw3 3.3 QUIET)
+# Avoid looking for Linux libraries if building for Windows
+if(WIN32)
+    set(glfw3_FOUND FALSE)
+else()
+    find_package(glfw3 3.3 QUIET)
+endif()
+
 if(NOT glfw3_FOUND)
-    message(STATUS "GLFW no encontrado en el sistema: se descargara con FetchContent")
+    message(STATUS "Using FetchContent for GLFW...")
     set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -35,7 +35,6 @@ if(NOT glfw3_FOUND)
         GIT_SHALLOW    TRUE)
     FetchContent_MakeAvailable(glfw)
 endif()
-
 
 add_executable(${CMAKE_PROJECT_NAME} 
     src/main.cpp
@@ -49,6 +48,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     imgui/backends/imgui_impl_glfw.cpp
     imgui/backends/imgui_impl_opengl3.cpp
     imgui/misc/cpp/imgui_stdlib.cpp
+    resources.rc #Windows app icon
     )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -63,12 +63,18 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
     OpenGL::GL
     #nfd
     )
+    
+# Force GCC/MinGW libraries static link when building for Windows 
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_options(${PROJECT_NAME} PRIVATE -static)
+endif()
 
 # Generator expression: ($<CONFIG:...>) also work in Visual Studio / Xcode
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:DEBUG_MODE>)
 
-if(MSVC)    # includes clang-cl
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /utf-8)   # /utf-8: for "ºC" in the code
+#Enable compiler warnings
+if(MSVC) 
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /utf-8)  
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
 endif()
@@ -81,7 +87,12 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/fonts)
 endif()
 
-
+# Create symlink for compile_commands.json for Clangd extension
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_SOURCE_DIR}/compile_commands.json)
+endif()
 
 
 

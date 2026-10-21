@@ -2,24 +2,48 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "debug",
-            "displayName": "Debug Build Configuration",
-            "description": "Build project for development and debugging",
-            "binaryDir": "${sourceDir}/build/debug",
+            "name": "linux-x64-debug",
+            "displayName": "Linux x86_64 (Debug)",
+            "description": "Native Linux Debug Build",
+            "binaryDir": "${sourceDir}/build/linux-debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
 
         },
         {
-            "name": "release",
-            "displayName": "Release Build Configuration",
-            "description": "Build project without debug tools and with optimizations",
-            "binaryDir": "${sourceDir}/build/release",
+            "name": "linux-x64-release",
+            "displayName": "Linux x86_64 (Release)",
+            "description": "Native Linux Release Build",
+            "binaryDir": "${sourceDir}/build/linux-release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
 
+        },
+        {
+            "name": "windows-x64-release",
+            "displayName": "Windows x86_64 from Linux (Release)",
+            "description": "Cross-compiling release build for Windows with MinGW-w64",
+            "binaryDir": "${sourceDir}/build/win-release",
+            "toolchainFile": "${sourceDir}/toolchain-windows.cmake",
+            "cacheVariables":{
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ],
+    "buildPresets":[
+        {
+            "name": "linux-x64-debug",
+            "configurePreset": "linux-x64-debug"
+        },
+        {
+            "name": "linux-x64-release",
+            "configurePreset": "linux-x64-release"
+        },
+        {
+            "name": "windows-x64-release",
+            "configurePreset": "windows-x64-release"
         }
     ]
 }
