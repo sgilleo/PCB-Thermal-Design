@@ -17,14 +17,19 @@ void App::Parameters(PCB& pcb)
     bool resize_pcb = false;
     bool reload_components = false;
 
+    ImGui::PushFont(jetbrainsmono_bold, 0.0f); // change font, keep current size
     ImGui::SeparatorText("PCB Parameters");
+
     if(ImGui::CollapsingHeader("PCB Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
+        ImGui::PushFont(jetbrainsmono_regular, 0.0f);
         resize_pcb |= ImGui::InputFloat("Width (mm)", &pcb.width, 1, 5, "%.2f");
         resize_pcb |= ImGui::InputFloat("Height (mm)", &pcb.height, 1, 5, "%.2f");
         resize_pcb |= ImGui::InputFloat("Cell Size (mm)", &pcb.cell_size, 1.0f, 5.0f, "%.1f");
-        ImGui::SliderFloat("Layer thicknes (um)", &pcb.layer_thickness, 18.0f, 70.0f, "%.1f");
-        ImGui::SliderInt("Number of copper planes", &pcb.layers, 2.0f, 32.0f, "%d");
+        resize_pcb |= ImGui::SliderFloat("Layer thicknes (um)", &pcb.layer_thickness, 18.0f, 70.0f, "%.1f");
+        resize_pcb |= ImGui::SliderInt("Number of copper planes", &pcb.layers, 2.0f, 32.0f, "%d");
+        ImGui::PopFont();
     }
+
 
     if(resize_pcb){
         pcb.resize();
@@ -32,12 +37,15 @@ void App::Parameters(PCB& pcb)
 
     ImGui::SeparatorText("Ambient Parameters");
     if(ImGui::CollapsingHeader("Ambient Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
+        ImGui::PushFont(jetbrainsmono_regular, 0.0f);
         ImGui::InputFloat("Ambient Temperature (ºC)", &pcb.t_amb);
         ImGui::InputFloat("Convection Coefficient (W/m²K)", &pcb.h_conv);
+        ImGui::PopFont();
     }
 
     ImGui::SeparatorText("Components");
     if(ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen)){
+        ImGui::PushFont(jetbrainsmono_regular, 0.0f);
         if(ImGui::Button("Add Component")){
             pcb.components.push_back(Component{"U" + std::to_string(pcb.components.size() + 1), pcb.width*0.5f, 
             pcb.height*0.5f, 8, 8});
@@ -65,17 +73,18 @@ void App::Parameters(PCB& pcb)
             reload_components |= ImGui::DragFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 1.0f, 0.1f, 50.0f, "%.1f");
             reload_components |= ImGui::DragFloat("Dissipated power (W)", &pcb.components[pcb.component_selected].power, 0.5f, 0.1f, 20.0f, "%.2f");
             reload_components |= ImGui::DragFloat("R_jb (K/W)", &pcb.components[pcb.component_selected].Rjb, 0.05f, 0.1f, 10.0f, "%.1f");
-        }   
+        }  
+        ImGui::PopFont(); 
     }
 
     if(reload_components) {
         pcb.reload_components();
     }
 
-
     ImGui::SeparatorText("Simulation");
 
     if(ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)){
+        ImGui::PushFont(jetbrainsmono_regular, 0.0f);
         ImGui::SliderFloat("Simulation Speed", &pcb.simulation_speed, 0.1f, 5.0f, "%.1f");
 
         ImGui::Checkbox("Autorange", &pcb.autorange);
@@ -89,12 +98,28 @@ void App::Parameters(PCB& pcb)
         ImGui::ColorEdit3("Color 3", (float*)&pcb.color_3, ImGuiColorEditFlags_NoInputs);
         ImGui::ColorEdit3("Color 4", (float*)&pcb.color_4, ImGuiColorEditFlags_NoInputs);
 
-        ImGui::Text("Tmin: %.1f ºC | Tavg: %.1f ºC | Tmax: %.1f ºC", pcb.T_min, pcb.T_avg, pcb.T_max);
+        ImGui::PushFont(jetbrainsmono_bold, 20.0f);
+        ImGui::Text("Tmin:");
+        ImGui::PopFont();
+        ImGui::SameLine();
+        ImGui::Text(" %.1f ºC | ", pcb.T_min);
+        ImGui::SameLine();
+        ImGui::PushFont(jetbrainsmono_bold, 20.0f);
+        ImGui::Text("Tavg:");
+        ImGui::PopFont();
+        ImGui::SameLine();
+        ImGui::Text(" %.1f ºC | ", pcb.T_avg);
+        ImGui::SameLine();
+        ImGui::PushFont(jetbrainsmono_bold, 20.0f);
+        ImGui::Text("Tmax:");
+        ImGui::PopFont();
+        ImGui::SameLine();
+        ImGui::Text(" %.1f ºC", pcb.T_max);
 
-        
-
-
+        ImGui::PopFont();
     }
+
+    ImGui::PopFont();
 
     ImGui::End();
 }
@@ -120,6 +145,7 @@ void App::Viewport(PCB& pcb){
 
     if(ImGui::BeginTabBar("Tab bar")){
 
+        ImGui::PushFont(jetbrainsmono_bold, 0.0f);
         if (ImGui::BeginTabItem("PCB", NULL)){
 
             DrawTexture(pcb, pcb.PCB_temp);
@@ -134,6 +160,7 @@ void App::Viewport(PCB& pcb){
 
             ImGui::EndTabItem();
         }
+        ImGui::PopFont();
 
 
         ImGui::EndTabBar();
@@ -180,10 +207,29 @@ void App::RenderUI(){
     Parameters(pcb1);
 }
 
-void App::SetupStyle(ImGuiStyle& style){
+void App::SetupStyle(float main_scale){
     // Configure App Style
 
-      // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
+
+    //io = ImGui::GetIO();
+
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable window docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-viewports feature
+    io.ConfigDpiScaleFonts=true; 
+
+    //First loaded font is default font
+    jetbrainsmono_regular = io.Fonts->AddFontFromFileTTF("fonts/JetBrainsMono-Regular.ttf");
+    jetbrainsmono_bold = io.Fonts->AddFontFromFileTTF("fonts/JetBrainsMono-Bold.ttf");
+
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+        // Setup scaling
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.FontScaleDpi = main_scale;        // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
 
     style.FrameRounding = 5.0f;
     style.WindowPadding = ImVec2(10.0f,8.0f);
