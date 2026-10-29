@@ -14,6 +14,10 @@ void App::Parameters(PCB& pcb)
 {
     ImGui::Begin("Simulation Settings");
 
+    ImVec2 avail = ImGui::GetContentRegionAvail();
+
+    ImGui::PushItemWidth(std::max(200.0f, avail.x*0.3f)); // Widget Bar width
+
     bool resize_pcb = false;
     bool reload_components = false;
 
@@ -38,8 +42,9 @@ void App::Parameters(PCB& pcb)
     ImGui::SeparatorText("Ambient Parameters");
     if(ImGui::CollapsingHeader("Ambient Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::PushFont(jetbrainsmono_regular, 0.0f);
-        ImGui::InputFloat("Ambient Temperature (ºC)", &pcb.t_amb);
-        ImGui::InputFloat("Convection Coefficient (W/m²K)", &pcb.h_conv);
+        ImGui::InputFloat("Ambient Temperature (ºC)", &pcb.t_amb, 1, 5, "%.1f");
+        ImGui::InputFloat("Convection Coefficient (W/m²K)", &pcb.h_conv, 1, 5, "%.1f");
+        ImGui::Checkbox("Convection from both faces of PCB", &pcb.convection_2_faces);
         ImGui::PopFont();
     }
 
@@ -121,6 +126,8 @@ void App::Parameters(PCB& pcb)
 
     ImGui::PopFont();
 
+    ImGui::PopItemWidth();
+
     ImGui::End();
 }
 
@@ -193,7 +200,7 @@ void App::RenderUI(){
         ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
         ImGuiID dock_id_left = 0;
         ImGuiID dock_id_main = dockspace_id;
-        ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.30f, &dock_id_left, &dock_id_main);
+        ImGui::DockBuilderSplitNode(dock_id_main, ImGuiDir_Left, 0.40f, &dock_id_left, &dock_id_main);
         ImGui::DockBuilderDockWindow("PCB Thermal Simulation", dock_id_main);
         ImGui::DockBuilderDockWindow("Simulation Settings", dock_id_left);
         ImGui::DockBuilderFinish(dockspace_id);
@@ -238,6 +245,10 @@ void App::SetupStyle(float main_scale){
     style.WindowRounding = 8.0f;
     style.FrameRounding = 4.0f;
     style.GrabRounding = 12.0f;
+    style.SeparatorTextAlign = ImVec2(0.5f, 0.5f);
+    style.ImageRounding = 10.0f;
+    style.DockingSeparatorSize = 3.0f;
+    style.TabMinWidthBase = 100.0f;
 
 }
 

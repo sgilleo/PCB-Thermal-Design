@@ -33,6 +33,7 @@ class PCB{
     float layer_thickness = 35; //Cu layer thickness in um
     float h_conv = 10; //Convection coefficient W/m²K
     float pcb_thickness = 1.4; //PCB thickness in mm
+    bool convection_2_faces = false;
 
     float simulation_speed = 1;
 

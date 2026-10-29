@@ -80,7 +80,7 @@ void PCB::calculate(){
     
     //dt = ImGui::GetIO().DeltaTime;
     //Cth = Cp_FR4*rho_FR4*cell_size*cell_size*pcb_thickness*1e-3;
-    Gconv = h_conv*cell_size*cell_size*1e-6;
+    Gconv = ((convection_2_faces)? 2:1) * h_conv*cell_size*cell_size*1e-6;
 
     for(int n = 0; n < max_iterations; n++){
 

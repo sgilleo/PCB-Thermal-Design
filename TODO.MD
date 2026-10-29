@@ -8,8 +8,9 @@
 - Add Vertical Stackup Representation
 - Add Junction and Coldplate heatmap tabs
 - Add duty cycle and transient simulation control.
-- Add Build & Package Presets
+- ~~Add Build & Package Presets~~
 - Add CPU Paralelization in shaders
 - ~~Add Bold Font to Titles~~
 - ~~Add Windows Icon~~  
-- Reduce slider bar default width
+- ~~Reduce slider bar default width~~
+- ~~Include convection by 2 faces or 1~~
