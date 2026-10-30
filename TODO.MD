@@ -12,7 +12,7 @@
 - Add PCB image overlay 
 - Add 2.5D and Stackup editor (PCB, Junction, Heatsink, ...)
 - Add Vertical Stackup Representation
-- Add Junction and Coldplate heatmap tabs
+- ~~Add Junction and Coldplate heatmap tabs~~
 - Add duty cycle and transient simulation control.
 - Automatic h convection coefficient calculation based on correlations
 - Support columns at chasis temperature
