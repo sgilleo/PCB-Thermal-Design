@@ -26,34 +26,45 @@ void App::Parameters(PCB& pcb)
 
     if(ImGui::CollapsingHeader("PCB Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::PushFont(jetbrainsmono_regular, 0.0f);
-        resize_pcb |= ImGui::InputFloat("Width (mm)", &pcb.width, 1, 5, "%.2f");
-        resize_pcb |= ImGui::InputFloat("Height (mm)", &pcb.height, 1, 5, "%.2f");
-        resize_pcb |= ImGui::InputFloat("Cell Size (mm)", &pcb.cell_size, 1.0f, 5.0f, "%.1f");
-        resize_pcb |= ImGui::SliderFloat("Layer thicknes (um)", &pcb.layer_thickness, 18.0f, 70.0f, "%.1f");
+        resize_pcb |= ImGui::InputFloat("Width", &pcb.width, 1, 5, "%.2f", ImGuiInputTextFlags_EnterReturnsTrue);
+        pcb.width = std::max(2*pcb.cell_size, pcb.width);
+        ImGui::SameLine(); HelpMarker("PCB Width in mm.");
+        resize_pcb |= ImGui::InputFloat("Height", &pcb.height, 1, 5, "%.2f", ImGuiInputTextFlags_EnterReturnsTrue);
+        pcb.height = std::max(2*pcb.cell_size, pcb.height);
+        ImGui::SameLine(); HelpMarker("PCB Height in mm.");
+        resize_pcb |= ImGui::InputFloat("Cell Size", &pcb.cell_size, 1.0f, 5.0f, "%.1f", ImGuiInputTextFlags_EnterReturnsTrue);
+        pcb.cell_size = std::max(pcb.cell_size, 0.5f);
+        ImGui::SameLine(); HelpMarker("PCB mesh cell size in mm.");
+        resize_pcb |= ImGui::SliderFloat("Layer thicknes", &pcb.layer_thickness, 18.0f, 70.0f, "%.1f");
+        ImGui::SameLine(); HelpMarker("Copper layer thickness in um.\n1/2oz = 18um\n1oz = 35um\n2oz = 70um");
         resize_pcb |= ImGui::SliderInt("Number of copper planes", &pcb.layers, 2.0f, 32.0f, "%d");
+        ImGui::SameLine(); HelpMarker("Number of approximately solid copper planes.");
         ImGui::PopFont();
     }
 
-
-    if(resize_pcb){
-        pcb.resize();
-    }
 
     ImGui::SeparatorText("Ambient Parameters");
     if(ImGui::CollapsingHeader("Ambient Parameters", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::PushFont(jetbrainsmono_regular, 0.0f);
-        ImGui::InputFloat("Ambient Temperature (ºC)", &pcb.t_amb, 1, 5, "%.1f");
-        ImGui::InputFloat("Convection Coefficient (W/m²K)", &pcb.h_conv, 1, 5, "%.1f");
-        ImGui::Checkbox("Convection from both faces of PCB", &pcb.convection_2_faces);
+        resize_pcb |= ImGui::InputFloat("Ambient Temperature", &pcb.t_amb, 1, 5, "%.1f");
+        ImGui::SameLine(); HelpMarker("Temperature of surrounding fluid in ºC.");
+        resize_pcb |= ImGui::InputFloat("Convection Coefficient", &pcb.h_conv, 1, 5, "%.1f");
+        ImGui::SameLine(); HelpMarker("Natural Convection Coefficient for heat dissipation to air in W/m²K.");
+        resize_pcb |= ImGui::Checkbox("Convection from both faces of PCB", &pcb.convection_2_faces);
+        ImGui::SameLine(); HelpMarker("Activates heat convection from the bottom side of the PCB.");
         ImGui::PopFont();
+    }
+
+    if(resize_pcb){
+        pcb.resize();
     }
 
     ImGui::SeparatorText("Components");
     if(ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::PushFont(jetbrainsmono_regular, 0.0f);
         if(ImGui::Button("Add Component")){
-            pcb.components.push_back(Component{"U" + std::to_string(pcb.components.size() + 1), pcb.width*0.5f, 
-            pcb.height*0.5f, 8, 8});
+            pcb.components.push_back(Component{"U" + std::to_string(pcb.components.size() + 1), pcb.width*0.2f, 
+            pcb.height*0.2f, pcb.width*0.5f, pcb.height*0.5f});
             pcb.component_selected = (int)pcb.components.size() - 1;
             reload_components = true;
 
@@ -66,19 +77,55 @@ void App::Parameters(PCB& pcb)
             reload_components = true;
         }
 
+        ImGui::SameLine(); HelpMarker("Adds a component or deletes selected component.");
+
         for(int i = 0; i<(int)pcb.components.size(); i++){
             if(ImGui::Selectable((pcb.components[i].name+"##").c_str(), pcb.component_selected == i)) pcb.component_selected = i;
         }
 
+        ImGui::Separator();
+
         if(pcb.component_selected >= 0 && pcb.component_selected < (int)pcb.components.size()){
             reload_components |= ImGui::InputText("Name", &pcb.components[pcb.component_selected].name, 0, nullptr, nullptr);
-            reload_components |= ImGui::InputFloat("X (mm)", &pcb.components[pcb.component_selected].x_pos, 1.0f, 2.0f, "%.1f");
-            reload_components |= ImGui::InputFloat("Y (mm)", &pcb.components[pcb.component_selected].y_pos, 1.0f, 2.0f, "%.1f");
-            reload_components |= ImGui::DragFloat("Component width (mm)", &pcb.components[pcb.component_selected].width, 1.0f, 0.1f, 50.0f, "%.1f");
-            reload_components |= ImGui::DragFloat("Component height (mm)", &pcb.components[pcb.component_selected].height, 1.0f, 0.1f, 50.0f, "%.1f");
-            reload_components |= ImGui::DragFloat("Dissipated power (W)", &pcb.components[pcb.component_selected].power, 0.5f, 0.1f, 20.0f, "%.2f");
-            reload_components |= ImGui::DragFloat("R_jb (K/W)", &pcb.components[pcb.component_selected].Rjb, 0.05f, 0.1f, 10.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Identifier of the component.");
+            reload_components |= ImGui::InputFloat("X", &pcb.components[pcb.component_selected].x_pos, 1.0f, 2.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Horizontal position of the component in mm.");
+            reload_components |= ImGui::InputFloat("Y", &pcb.components[pcb.component_selected].y_pos, 1.0f, 2.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Vertical position of the component in mm.");
+            reload_components |= ImGui::DragFloat("Component width", &pcb.components[pcb.component_selected].width, 1.0f, 0.1f, 50.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Horizontal size of the component in mm.");
+            reload_components |= ImGui::DragFloat("Component height", &pcb.components[pcb.component_selected].height, 1.0f, 0.1f, 50.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Vertizal size of the component in mm.");
+            reload_components |= ImGui::DragFloat("Dissipated power", &pcb.components[pcb.component_selected].power, 0.5f, 0.1f, 20.0f, "%.2f");
+            ImGui::SameLine(); HelpMarker("Heat power dissipated by the component in Watts.");
+            reload_components |= ImGui::DragFloat("R_jb", &pcb.components[pcb.component_selected].Rjb, 0.05f, 1.0f, 50.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Thermal resistance from junction to base in K/W.");
+            reload_components |= ImGui::DragFloat("R_jc", &pcb.components[pcb.component_selected].Rjc, 0.05f, 5.0f, 100.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Thermal resistance from junction to case in K/W.");
+            if (ImGui::Checkbox("Has Heatsink", &pcb.components[pcb.component_selected].hasHeatsink)){
+                reload_components = 1;
+            }
+            ImGui::SameLine(); HelpMarker("Puts a heatsink on top of the component.");
+            if(!pcb.components[pcb.component_selected].hasHeatsink){
+                ImGui::BeginDisabled();
+            }
+
+            const char* material_names[3] = { "Copper", "Aluminum", "Ceramic"};
+            const char* material_name = (pcb.components[pcb.component_selected].material >= 0 && pcb.components[pcb.component_selected].material < 3) ? material_names[pcb.components[pcb.component_selected].material] : "Unknown";
+            reload_components |= ImGui::SliderInt("Heatsink Material",(int *) &pcb.components[pcb.component_selected].material, 0, 2, material_name);
+            ImGui::SameLine(); HelpMarker("Heatsink material selector used to estimate thermal conductivity for lateral heat diffusion.\nCopper: 350 W/mK\nAluminum: 237 W/mK\nCeramic (Non conductive): 30 W/mK");
+            reload_components |= ImGui::DragFloat("R_ca", &pcb.components[pcb.component_selected].Rca, 0.05f, 1.0f, 100.0f, "%.1f");
+            ImGui::SameLine(); HelpMarker("Thermal resistance from component case to ambient in K/W.\nUsually given in heatsinks datasheet.");
+            reload_components |= ImGui::DragFloat("Heatsink Thickness", &pcb.components[pcb.component_selected].heatsink_thickness, 0.05f, 0.5f, 10, "%.1f");
+            ImGui::SameLine(); HelpMarker("Heatsink thickness in mm used to estimate the cross-section for lateral heat diffusion.");
+
+
+            if(!pcb.components[pcb.component_selected].hasHeatsink){
+                ImGui::EndDisabled();
+            }
+
         }  
+
         ImGui::PopFont(); 
     }
 
@@ -90,39 +137,41 @@ void App::Parameters(PCB& pcb)
 
     if(ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::PushFont(jetbrainsmono_regular, 0.0f);
-        ImGui::SliderFloat("Simulation Speed", &pcb.simulation_speed, 0.1f, 5.0f, "%.1f");
-
         ImGui::Checkbox("Autorange", &pcb.autorange);
+        ImGui::SameLine(); HelpMarker("Activates the autorange feature for the colormap.");
         if(!pcb.autorange){
             ImGui::DragFloat("Cold Temperature", &pcb.range_min, 0.2f, -10.0f, pcb.range_max-1);
+            ImGui::SameLine(); HelpMarker("Minimum temperature of the heatmap in ºC.");
             ImGui::DragFloat("Hot Temperature", &pcb.range_max, 0.2f, pcb.range_min+1, 200.0f);
+            ImGui::SameLine(); HelpMarker("Maximum temperature of the heatmap in ºC.");
         }
 
         ImGui::ColorEdit3("Color 1", (float*)&pcb.color_1, ImGuiColorEditFlags_NoInputs);
+        ImGui::SameLine(); HelpMarker("Color at 0\% of the temperature range.");
         ImGui::ColorEdit3("Color 2", (float*)&pcb.color_2, ImGuiColorEditFlags_NoInputs);
+        ImGui::SameLine(); HelpMarker("Color at 33\% of the temperature range.");
         ImGui::ColorEdit3("Color 3", (float*)&pcb.color_3, ImGuiColorEditFlags_NoInputs);
+        ImGui::SameLine(); HelpMarker("Color at 66\% of the temperature range.");
         ImGui::ColorEdit3("Color 4", (float*)&pcb.color_4, ImGuiColorEditFlags_NoInputs);
-
-        ImGui::PushFont(jetbrainsmono_bold, 20.0f);
-        ImGui::Text("Tmin:");
-        ImGui::PopFont();
-        ImGui::SameLine();
-        ImGui::Text(" %.1f ºC | ", pcb.T_min);
-        ImGui::SameLine();
-        ImGui::PushFont(jetbrainsmono_bold, 20.0f);
-        ImGui::Text("Tavg:");
-        ImGui::PopFont();
-        ImGui::SameLine();
-        ImGui::Text(" %.1f ºC | ", pcb.T_avg);
-        ImGui::SameLine();
-        ImGui::PushFont(jetbrainsmono_bold, 20.0f);
-        ImGui::Text("Tmax:");
-        ImGui::PopFont();
-        ImGui::SameLine();
-        ImGui::Text(" %.1f ºC", pcb.T_max);
+        ImGui::SameLine(); HelpMarker("Color at 100\% of the temperature range.");
 
         ImGui::PopFont();
     }
+
+    ImGui::SeparatorText("Statistics");
+
+    ImGui::Text("Tmin:");
+    ImGui::SameLine();
+    ImGui::Text(" %.1f ºC | ", pcb.T_min);
+    ImGui::SameLine();
+    ImGui::Text("Tavg:");
+    ImGui::SameLine();
+    ImGui::Text(" %.1f ºC | ", pcb.T_avg);
+    ImGui::SameLine();
+    ImGui::Text("Tmax:");
+    ImGui::SameLine();
+    ImGui::Text(" %.1f ºC", pcb.T_max);
+    ImGui::SameLine(); HelpMarker("Minimum, maximum and average temperatures of the current heatmap.");
 
     ImGui::PopFont();
 
@@ -167,6 +216,17 @@ void App::Viewport(PCB& pcb){
 
             ImGui::EndTabItem();
         }
+
+        if (ImGui::BeginTabItem("Heatsink", NULL)){
+
+            DrawTexture(pcb, pcb.Heatsink_temp);
+            
+            ImGui::EndTabItem();
+
+        }
+
+
+
         ImGui::PopFont();
 
 
@@ -261,7 +321,7 @@ void App::DrawTexture(PCB& pcb, std::vector<float>& grid){
 
     ImVec2 p0 = ImGui::GetCursorScreenPos();
 
-    pcb1.update(grid);
+    pcb.update(grid);
 
     ImGui::Image((ImTextureID)(intptr_t)pcb.pcb_image, size);
     ImGui::SetCursorScreenPos(p0);
@@ -293,5 +353,18 @@ void App::DrawTexture(PCB& pcb, std::vector<float>& grid){
         ImVec2 p_max(p_min.x+pcb.components[i].width*scale, p_min.y+pcb.components[i].height*scale); //Lower right corner
         dl->AddRect(p_min, p_max, i==pcb.component_selected? IM_COL32(255, 255, 255, 255):IM_COL32(0, 0, 0, 255), 5.0f, 0, 2.0f);
         dl->AddText(ImVec2(p_min.x + 2, p_min.y + 2), IM_COL32(0, 0, 0, 255), pcb.components[i].name.c_str());
+    }
+}
+
+
+void App::HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
     }
 }

@@ -8,7 +8,7 @@ class PCB{
     public:
 
     PCB();
-    PCB(float width, float height, float cell_size);
+    PCB(float width, float height);
     //~PCB();
 
     unsigned int texture = 0; //Heat texture
@@ -16,8 +16,7 @@ class PCB{
 
     std::vector<float> PCB_temp; //PCB Temperature grid
     std::vector<float> Junction_temp; //Junction Temperature grid
-
-
+    std::vector<float> Heatsink_temp; //Heatsink Temperature grid
 
     int nx, ny; //Texture size
 
@@ -27,15 +26,13 @@ class PCB{
 
     float width; //PCB Width in mm
     float height; //PCB Height in mm
-    float cell_size; //PCB Cell Size in mm
+    float cell_size = 4; //PCB Cell Size in mm
     float t_amb = 25; //Ambient temperature ºC
     int layers = 2; //Number of copper layers
     float layer_thickness = 35; //Cu layer thickness in um
     float h_conv = 10; //Convection coefficient W/m²K
     float pcb_thickness = 1.4; //PCB thickness in mm
     bool convection_2_faces = false;
-
-    float simulation_speed = 1;
 
     void resize(); //Resize temp_grid, pixel matrices and texture 
     void update(std::vector<float>& Temp_grid); //Update pixels
@@ -58,6 +55,8 @@ class PCB{
     private:
 
         const float Cu_K = 350; //Copper Thermal conductivity (W/mK)
+        const float Al_K = 237; //Aluminum Thermal conductivity (W/mK)
+        const float Ceramic_K = 30; //Alumina Ceramic thermal conductivity (W/mK)
         const float Cp_FR4 = 0.9; //FR4 Specific Heat
         const float rho_FR4 = 1.85; //FR4 Density g/cm³
         const float Si_K = 150; //Silicon Thermal Conductivity (W/mK)
@@ -67,15 +66,16 @@ class PCB{
 
         std::vector<float> Component_grid; //Grid with power dissipated by each cell (from junction)
         std::vector<float> Gjb_grid; //Grid of thermal conductances from junction to PCB
+        std::vector<float> Gjc_grid; //Grid of thermal conductances from junction to component case
 
 
 
-        float Gcond; //Lateral PCB thermal conductivity (W/K)
-        float Gconv; //PCB Convection thermal conductivity (W/K)
-        float G_si; //Lateral Silicon thermal conductivity
+        float Gcond; //Cell lateral PCB thermal conductivity (W/K)
+        float Gconv; //PCB Cell convection thermal conductivity (W/K)
+        float G_si; //Cell lateral Silicon thermal conductivity
 
-        float Cth; //Thermal capacity per cell ()
-        float dt;
+        //float Cth; //Thermal capacity per cell ()
+        //float dt;
 
         std::vector<unsigned char> pixels; //RGB Pixels, 8 bits per color channel
 

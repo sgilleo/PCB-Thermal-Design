@@ -1,6 +1,12 @@
 - ~~Add Docking feature~~
 - ~~Change font~~
+- ~~Add Build & Package Presets~~
+- ~~Add Bold Font to Titles~~
+- ~~Add Windows Icon~~  
+- ~~Reduce slider bar default width~~
+- ~~Include convection by 2 faces or 1~~
 - Load icon fonts
+- Add CPU Paralelization in shaders
 - Add controls for saving image
 - Add controls for configuring appearance and theme
 - Add PCB image overlay 
@@ -8,9 +14,7 @@
 - Add Vertical Stackup Representation
 - Add Junction and Coldplate heatmap tabs
 - Add duty cycle and transient simulation control.
-- ~~Add Build & Package Presets~~
-- Add CPU Paralelization in shaders
-- ~~Add Bold Font to Titles~~
-- ~~Add Windows Icon~~  
-- ~~Reduce slider bar default width~~
-- ~~Include convection by 2 faces or 1~~
+- Automatic h convection coefficient calculation based on correlations
+- Support columns at chasis temperature
+- ~~Add Help Markers~~
+- Add heatmap color presets

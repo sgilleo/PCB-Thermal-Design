@@ -14,19 +14,39 @@
 #define GL_CLAMP_TO_EDGE 0x812F
 #endif
 
-PCB::PCB(): PCB(100.0f, 50.0f, 4.0f) { //Set defaults
-    components.push_back(Component{"CPU", width/2-10, height/2-10, 20, 20, 0.5});
-    components.push_back(Component{"LDO", width/2-40, height/2-10, 10, 5, 0.1});
+PCB::PCB(): PCB(255.0f, 165.0f) { //Set defaults
+    //components.push_back(Component{"CPU", width/2-10, height/2-10, 20, 20, 0.5});
+    //components.push_back(Component{"LDO", width/2-40, height/2-10, 10, 5, 0.1});
+
+    t_amb = 35;
+    layers = 6;
+    h_conv = 4.87;
+    convection_2_faces = true;
+
+    components.push_back(Component{"CPU", 42.5f, 42.5f, 140, 40, 2.0f, 2, 1});
+    components.push_back(Component{"DSP", 42.5f, 42.5f, 140, 100, 2.0f, 2, 1});
+
+    components.push_back(Component{"RAM1", 13.0f, 8.4f, 210, 30, 0.2f});
+    components.push_back(Component{"RAM2", 13.0f, 8.4f, 210, 45, 0.2f});
+    components.push_back(Component{"FLASH2", 13.0f, 8.4f, 210, 60, 0.2f});
+    components.push_back(Component{"FLASH1", 13.0f, 8.4f, 210, 75, 0.2f});
+
+    components.push_back(Component{"LDO1", 15.0f, 15.0f, 25, 30, 0.15f});
+    components.push_back(Component{"LDO2", 15.0f, 15.0f, 50, 30, 0.15f});
+    components.push_back(Component{"LDO3", 15.0f, 15.0f, 75, 30, 0.15f});
+    components.push_back(Component{"IC1", 15.0f, 15.0f, 90, 140, 0.15f});
+
+    components.push_back(Component{"FPGA", 45.0f, 45.0f, 50, 75, 4.0f, 4, 0.5f});
+
     resize();
 
 }
 
 
-PCB::PCB(float width, float height, float cell_size){
+PCB::PCB(float width, float height){
 
     this->width = width;
     this->height = height;
-    this->cell_size = cell_size;
 
     glGenTextures(1, &texture);
     resize();
@@ -44,7 +64,9 @@ void PCB::resize(){
     reload_components();
 
     Gcond = Cu_K*layers*layer_thickness*1e-6;
-    G_si = Si_K*0.3e-3; //300um silicon thickness
+    G_si = Si_K*300e-6; //300um silicon thickness
+    Gconv = h_conv*cell_size*cell_size*1e-6;
+
 
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -80,7 +102,6 @@ void PCB::calculate(){
     
     //dt = ImGui::GetIO().DeltaTime;
     //Cth = Cp_FR4*rho_FR4*cell_size*cell_size*pcb_thickness*1e-3;
-    Gconv = ((convection_2_faces)? 2:1) * h_conv*cell_size*cell_size*1e-6;
 
     for(int n = 0; n < max_iterations; n++){
 
@@ -111,12 +132,19 @@ void PCB::calculate(){
                     n_cells++;
                 }
 
-                //Estado transitorio
+                //Transient state
                 //float P = (Tu+Tr+Td+Tl-4*Tc)/(Rcond)+(t_amb-Tc)/Rconv + Component_grid[index];
                 //PCB_temp[index] += P/Cth*dt*simulation_speed;
 
-                //Estado estacionario
-                float Gconv_mask = (Component_grid[index]>0) ? 0 : Gconv; //Convection conductance only in cells exposed to air
+                //Steady state
+                float Gconv_mask; //Convection conductance in 2 faces only in cells exposed to air
+                if(convection_2_faces){
+                    Gconv_mask = (Gjb_grid[index] > 0) ? Gconv : 2*Gconv; 
+                }
+                else{
+                    Gconv_mask = (Gjb_grid[index] > 0) ? 0 : Gconv; //Convection conductance only in cells exposed to air
+
+                }
 
                 PCB_temp[index] = (T_sum*Gcond+t_amb*Gconv_mask+Junction_temp[index]*Gjb_grid[index])/(n_cells*Gcond+Gconv_mask+Gjb_grid[index]);
             }
@@ -128,33 +156,78 @@ void PCB::calculate(){
             int i1 = std::min(nx, (int)std::ceil((component.x_pos + component.width) / cell_size));
             int j0 = std::max(0,  (int)std::floor(component.y_pos / cell_size));
             int j1 = std::min(ny, (int)std::ceil((component.y_pos + component.height) / cell_size));
+            int n = std::max(0, i1 - i0) * std::max(0, j1 - j0); //Number of cells that the component occupies
+
+
+            float G_heatsink; //Component heatsink lateral thermal conductivity
+            if(n==0) continue;
+            float cell_Gca = 1/(n*component.Rca); //Heatsink cell conductance from case to air 
+
+
+
+            if(component.hasHeatsink){
+                switch(component.material){
+                    default:
+                        G_heatsink = 0.0f;
+                        break;
+                    case Aluminum:
+                        G_heatsink = Al_K*component.heatsink_thickness*1e-3;
+                        break;
+                    case Copper:
+                        G_heatsink = Cu_K*component.heatsink_thickness*1e-3;
+                        break;
+                    case Ceramic:
+                        G_heatsink = Ceramic_K*component.heatsink_thickness*1e-3;
+                        break;
+                }
+            }
+            
 
             for(int j = j0; j < j1; j++){
                 for(int i = i0; i < i1; i++){
                     int index = j * nx + i;
 
-                    float T_sum = 0.0f; //Sum of neighbouring cell temperatures
+                    float T_sum_junction = 0.0f; //Sum of neighbouring junction cell temperatures
+                    float T_sum_heatsink = 0.0f; //Sum of neighbouring heatsink cell temperatures
+
                     float n_cells = 0;
 
                     if(j>j0){
-                        T_sum += Junction_temp[index-nx]; //Temperature of the upper cell
+                        T_sum_junction += Junction_temp[index-nx]; //Temperature of the upper cell
+                        T_sum_heatsink += Heatsink_temp[index-nx];
                         n_cells++;
                     }
                     if(i < i1-1){
-                        T_sum += Junction_temp[index+1]; //Temperature of the right cell
+                        T_sum_junction += Junction_temp[index+1]; //Temperature of the right cell
+                        T_sum_heatsink += Heatsink_temp[index+1];
                         n_cells++;
 
                     }
                     if(j < j1-1){
-                        T_sum += Junction_temp[index+nx]; //Temperature of the lower cell 
+                        T_sum_junction += Junction_temp[index+nx]; //Temperature of the lower cell 
+                        T_sum_heatsink += Heatsink_temp[index+nx];
                         n_cells++;
 
                     }
                     if(i > i0){
-                        T_sum += Junction_temp[index-1]; //Temperature of the left cell
+                        T_sum_junction += Junction_temp[index-1]; //Temperature of the left cell
+                        T_sum_heatsink += Heatsink_temp[index-1];
                         n_cells++;
                     }
-                    Junction_temp[index] = (T_sum*G_si+PCB_temp[index]*Gjb_grid[index]+Component_grid[index])/(n_cells*G_si+Gjb_grid[index]);
+
+                    float Gju; //Resistance to silicon junction to upper material (air or heatsink)
+                    float T_up;
+                    if(component.hasHeatsink){
+                        T_up = Heatsink_temp[index];
+                        Gju = Gjc_grid[index];
+                        Heatsink_temp[index] = (T_sum_heatsink*G_heatsink+Junction_temp[index]*Gjc_grid[index]+t_amb*cell_Gca)/(n_cells*G_heatsink+Gjc_grid[index]+cell_Gca);
+                    }
+                    else{
+                        T_up = t_amb;
+                        Gju = (Gconv*Gjc_grid[index])/(Gconv+Gjc_grid[index]); //Sum of Rjc and Rconv resistances
+                    }
+
+                    Junction_temp[index] = (T_sum_junction*G_si+PCB_temp[index]*Gjb_grid[index]+T_up*Gju+Component_grid[index])/(n_cells*G_si+Gjb_grid[index]+Gju);
 
                 }
             }
@@ -165,22 +238,27 @@ void PCB::calculate(){
 void PCB::reload_components(){
     Component_grid.assign(nx * ny, 0);
     Gjb_grid.assign(nx * ny, 0);
+    Gjc_grid.assign(nx * ny, 0);
     Junction_temp.assign(nx * ny, t_amb);
+    Heatsink_temp.assign(nx * ny, t_amb);
+
     for(const Component& component : components){
         int i0 = std::max(0,  (int)std::floor(component.x_pos / cell_size));
         int i1 = std::min(nx, (int)std::ceil((component.x_pos + component.width) / cell_size));
         int j0 = std::max(0,  (int)std::floor(component.y_pos / cell_size));
         int j1 = std::min(ny, (int)std::ceil((component.y_pos + component.height) / cell_size));
-        int n = std::max(0, i1 - i0) * std::max(0, j1 - j0);   // celdas que de verdad ocupa
+        int n = std::max(0, i1 - i0) * std::max(0, j1 - j0); //Number of cells that the component occupies
         if(n==0) continue;
 
         float cell_gjb = 1/(component.Rjb*n);
+        float cell_gjc = 1/(component.Rjc*n);
         float cell_q = component.power/(n);
 
         for(int j = j0; j < j1; j++){
             for(int i = i0; i < i1; i++){
                 Component_grid[j*nx+i] += cell_q;
                 Gjb_grid[j*nx+i] += cell_gjb;
+                Gjc_grid[j*nx+i] += cell_gjc;
             }
         }
     }
