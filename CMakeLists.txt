@@ -87,6 +87,13 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/fonts)
 endif()
 
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/res)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/res
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>/res)
+endif()
+
 # Create symlink for compile_commands.json for Clangd extension
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink

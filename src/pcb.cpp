@@ -40,7 +40,7 @@ PCB::PCB(): PCB(255.0f, 165.0f) { //Set defaults
 
     components.push_back(Component{"FPGA", 45.0f, 45.0f, 65.9, 78, 4.0f, 4, 0.5f});
 
-    load_image("pcb.png");
+    load_image("res/pcb.png");
 
     resize();
 
@@ -163,7 +163,7 @@ void PCB::calculate(){
             int n = std::max(0, i1 - i0) * std::max(0, j1 - j0); //Number of cells that the component occupies
 
 
-            float G_heatsink; //Component heatsink lateral thermal conductivity
+            float G_heatsink = 0; //Component heatsink lateral thermal conductivity
             if(n==0) continue;
             float cell_Gca = 1/(n*component.Rca); //Heatsink cell conductance from case to air 
 
