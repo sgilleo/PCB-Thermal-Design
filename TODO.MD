@@ -9,7 +9,7 @@
 - Add CPU Paralelization in shaders
 - Add controls for saving image
 - Add controls for configuring appearance and theme
-- Add PCB image overlay 
+- ~~Add PCB image overlay~~ 
 - Add 2.5D and Stackup editor (PCB, Junction, Heatsink, ...)
 - Add Vertical Stackup Representation
 - ~~Add Junction and Coldplate heatmap tabs~~
