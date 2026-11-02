@@ -33,12 +33,15 @@ class PCB{
     float h_conv = 10; //Convection coefficient W/m²K
     float pcb_thickness = 1.4; //PCB thickness in mm
     bool convection_2_faces = false;
+    bool overlay = true; //Has PCB image overlay
+    float overlay_alpha = 0.2f; //Overlay transparency
+
 
     void resize(); //Resize temp_grid, pixel matrices and texture 
     void update(std::vector<float>& Temp_grid); //Update pixels
     void reload_components();
     void calculate();
-    void load_image();
+    void load_image(const char* filename);
 
     float T_min; //Minimum temperature of the PCB ºC
     float T_max; //Maximum temperature of the PCB ºC

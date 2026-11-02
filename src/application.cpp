@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cstdint>
+#include <string>
 #include <vector>
 #include "component.h"
 #include "imgui.h"
@@ -8,7 +10,6 @@
 #include "application.h"
 #include "pcb.h"
 #include "component.h"
-
 
 void App::Parameters(PCB& pcb)
 {
@@ -137,6 +138,36 @@ void App::Parameters(PCB& pcb)
 
     if(ImGui::CollapsingHeader("Simulation", ImGuiTreeNodeFlags_DefaultOpen)){
         ImGui::PushFont(jetbrainsmono_regular, 0.0f);
+
+        static char path[32] = "";
+
+        ImGui::InputText("##Path", path, sizeof(path)/sizeof(char));
+        ImGui::SameLine();
+        if(ImGui::Button("Load Image")){
+            pcb.load_image(path);
+        }   
+        ImGui::SameLine(); HelpMarker("Load image by filename");
+
+
+        ImGui::Checkbox("Overlay", &pcb.overlay);
+        ImGui::SameLine(); HelpMarker("Overlays pcb image on top of the heatmap.");
+
+
+        if(!pcb.overlay){
+            ImGui::BeginDisabled();
+        }        
+
+        ImGui::SliderFloat("Transparency", &pcb.overlay_alpha, 0.0f, 1.0f, "%.1f");
+        ImGui::SameLine(); HelpMarker("Transparency of the overlay image");
+
+        ImGui::Separator();
+
+        if(!pcb.overlay){
+            ImGui::EndDisabled();
+        } 
+
+
+
         ImGui::Checkbox("Autorange", &pcb.autorange);
         ImGui::SameLine(); HelpMarker("Activates the autorange feature for the colormap.");
         if(!pcb.autorange){
@@ -188,9 +219,8 @@ void App::Viewport(PCB& pcb){
 
         if (ImGui::BeginMenu("File"))
         {
-            if(ImGui::MenuItem("Load", "Ctrl+S")){
-                pcb.load_image();
-            }
+            //if(ImGui::MenuItem("Load", "Ctrl+L")){
+            //}
             ImGui::EndMenu();
         }
 
@@ -320,14 +350,22 @@ void App::DrawTexture(PCB& pcb, std::vector<float>& grid){
     ImVec2 size(pcb.width*scale, pcb.height*scale);
 
     ImVec2 p0 = ImGui::GetCursorScreenPos();
+    //ImVec2 p1(p0.x + size.x, p0.y + size.y);
 
     pcb.update(grid);
 
-    ImGui::Image((ImTextureID)(intptr_t)pcb.pcb_image, size);
-    ImGui::SetCursorScreenPos(p0);
     ImGui::Image((ImTextureID)(intptr_t)pcb.texture, size);
+    ImGui::SetCursorScreenPos(p0);
+
+    if(pcb.overlay){
+        ImVec4 tint_color(1.0f, 1.0f, 1.0f, pcb.overlay_alpha);
+        //ImU32 tint_color = IM_COL32(255, 255, 255, (int)(pcb.overlay_alpha * 255));
+        ImGui::Image((ImTextureID)(intptr_t)pcb.pcb_image, size, ImVec2(0, 0), ImVec2(1, 1), tint_color, ImVec4(0, 0, 0, 0));
+    }
+    
     bool hovered = ImGui::IsItemHovered();
     ImDrawList* dl = ImGui::GetWindowDrawList();
+
 
     //Temperature probe
     if(hovered){

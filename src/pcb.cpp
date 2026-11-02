@@ -7,6 +7,8 @@
 #include "component.h"
 #include "imgui.h"
 
+#include <iostream>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -23,20 +25,22 @@ PCB::PCB(): PCB(255.0f, 165.0f) { //Set defaults
     h_conv = 4.87;
     convection_2_faces = true;
 
-    components.push_back(Component{"CPU", 42.5f, 42.5f, 140, 40, 2.0f, 2, 1});
-    components.push_back(Component{"DSP", 42.5f, 42.5f, 140, 100, 2.0f, 2, 1});
+    components.push_back(Component{"CPU", 42.5f, 42.5f, 152.2, 37.3, 2.0f, 2, 1});
+    components.push_back(Component{"DSP", 42.5f, 42.5f, 153.9, 99, 2.0f, 2, 1});
 
-    components.push_back(Component{"RAM1", 13.0f, 8.4f, 210, 30, 0.2f});
-    components.push_back(Component{"RAM2", 13.0f, 8.4f, 210, 45, 0.2f});
-    components.push_back(Component{"FLASH2", 13.0f, 8.4f, 210, 60, 0.2f});
-    components.push_back(Component{"FLASH1", 13.0f, 8.4f, 210, 75, 0.2f});
+    components.push_back(Component{"RAM1", 13.0f, 8.4f, 220.4, 27.5, 0.2f});
+    components.push_back(Component{"RAM2", 13.0f, 8.4f, 220.4, 44.3, 0.2f});
+    components.push_back(Component{"FLASH1", 13.0f, 8.4f, 220.4, 61.1, 0.2f});
+    components.push_back(Component{"FLASH2", 13.0f, 8.4f, 220.4, 78.1, 0.2f});
 
-    components.push_back(Component{"LDO1", 15.0f, 15.0f, 25, 30, 0.15f});
-    components.push_back(Component{"LDO2", 15.0f, 15.0f, 50, 30, 0.15f});
-    components.push_back(Component{"LDO3", 15.0f, 15.0f, 75, 30, 0.15f});
-    components.push_back(Component{"IC1", 15.0f, 15.0f, 90, 140, 0.15f});
+    components.push_back(Component{"LDO1", 15.0f, 15.0f, 14.6, 35, 0.15f});
+    components.push_back(Component{"LDO2", 15.0f, 15.0f, 47.3, 35, 0.15f});
+    components.push_back(Component{"LDO3", 15.0f, 15.0f, 87.7, 35, 0.15f});
+    components.push_back(Component{"IC1", 15.0f, 15.0f, 101.2, 136.3, 0.15f});
 
-    components.push_back(Component{"FPGA", 45.0f, 45.0f, 50, 75, 4.0f, 4, 0.5f});
+    components.push_back(Component{"FPGA", 45.0f, 45.0f, 65.9, 78, 4.0f, 4, 0.5f});
+
+    load_image("pcb.png");
 
     resize();
 
@@ -304,14 +308,23 @@ void PCB::color_map(float temp, float t_min, float t_max, unsigned char* color){
 
 }
 
-void PCB::load_image(){
+void PCB::load_image(const char* filename){
 
     int width, height, nrChannels;
     
-    unsigned char* image_data = stbi_load("pcb.png", &width, &height, &nrChannels, 3);
+    unsigned char* image_data = stbi_load(filename, &width, &height, &nrChannels, 4);
+    if(!image_data){
+        std::cout << "No image found";
+    }
     glGenTextures(1, &pcb_image);
     glBindTexture(GL_TEXTURE_2D, pcb_image);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
 
     stbi_image_free(image_data);
 
